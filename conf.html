@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confirmação da Rifa</title>
+  <style>
+    :root {
+      --cor-destaque: #ff6600;
+      --preto: #000;
+      --branco: #fff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--branco);
+      color: #111;
+    }
+
+    header {
+      background: var(--preto);
+      padding: 20px;
+      text-align: center;
+    }
+
+    header img {
+      height: 60px;
+    }
+
+    main {
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    .box {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .info {
+      margin: 10px 0;
+      font-size: 18px;
+    }
+
+    .numeros {
+      margin: 20px 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .numero {
+      background: var(--cor-destaque);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .botoes {
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .botoes button {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .voltar {
+      background: #ccc;
+      color: #333;
+    }
+
+    .confirmar {
+      background: var(--cor-destaque);
+      color: white;
+    }
+
+    footer {
+      background: var(--preto);
+      color: var(--branco);
+      padding: 20px;
+      text-align: center;
+      margin-top: 40px;
+    }
+  </style>
+  <!-- Adicione isso dentro da tag <head>, depois do <style> -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCcFT1wZ44d9Qb_YI1wwO6-5_gAAhwwfgs",
+    authDomain: "matline-rifa.firebaseapp.com",
+    databaseURL: "https://matline-rifa-default-rtdb.firebaseio.com",
+    projectId: "matline-rifa",
+    storageBucket: "matline-rifa.appspot.com",
+    messagingSenderId: "704222950179",
+    appId: "1:704222950179:web:f6931376fa1a8dc5b65296"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <img src="imgs/logo.png" alt="Logo Matline">
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main>
+    <div class="box">
+      <h1>Confirme sua participação</h1>
+
+      <div class="info">
+        <strong>Números escolhidos:</strong>
+        <div class="numeros" id="numerosSelecionados">
+          <!-- Números aparecem aqui -->
+        </div>
+      </div>
+
+      <div class="info">
+        Valor por número: <strong id="valorNumero">R$ 0,00</strong>
+      </div>
+
+      <div class="info">
+        Valor total: <strong id="valorTotal">R$ 0,00</strong>
+      </div>
+      
+         <form id="formDados" style="margin-top: 20px;">
+    <label for="nome">Seu nome:</label><br>
+    <input type="text" id="nome" required style="width: 100%; padding: 8px; margin-bottom: 10px;"><br>
+
+    <label for="celular">WhatsApp:</label><br>
+    <input type="tel" id="celular" required placeholder="(DDD) 9XXXX-XXXX" style="width: 100%; padding: 8px;"><br>
+  </form>
+      
+      <div class="botoes">
+        <button class="voltar" onclick="window.history.back()">Voltar</button>
+        <button class="confirmar" onclick="gerarPix()">Confirmar e gerar PIX</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Rodapé -->
+  <footer>
+    <p>Contato: (47) 98859-7839</p>
+    <p>&copy; 2025 Matline. Todos os direitos reservados.</p>
+  </footer>
+
+  <!-- Script de carregamento -->
+  <script>
+    // Pega os dados do localStorage
+    const numeros = JSON.parse(localStorage.getItem('numerosSelecionados')) || [];
+    const valorUnitario = parseFloat(localStorage.getItem('valorPorNumero')) || 0;
+
+    const container = document.getElementById('numerosSelecionados');
+    const valorTotal = document.getElementById('valorTotal');
+    const valorNumero = document.getElementById('valorNumero');
+
+    // Preenche os números
+    numeros.forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'numero';
+      div.textContent = n;
+      container.appendChild(div);
+    });
+
+    // Preenche valores
+    valorNumero.textContent = `R$ ${valorUnitario.toFixed(2)}`;
+    const total = valorUnitario * numeros.length;
+    valorTotal.textContent = `R$ ${total.toFixed(2)}`;
+
+    // Função para gerar código PIX
+    function gerarPix() {
+    const nome = document.getElementById("nome").value.trim();
+    const celular = document.getElementById("celular").value.trim();
+
+    if (!nome || !celular) {
+      alert("Por favor, preencha seu nome e WhatsApp.");
+      return;
+    }
+
+    const numeros = JSON.parse(localStorage.getItem("numerosSelecionados")) || [];
+    const valorUnitario = parseFloat(localStorage.getItem("valorPorNumero")) || 0;
+    const total = valorUnitario * numeros.length;
+
+    const pedido = {
+      nome,
+      celular,
+      numeros,
+      valorTotal: total,
+      data: new Date().toISOString()
+    };
+
+    // Envia para o Firebase
+    const ref = db.ref("rifaAtual/pedidosPendentes");
+    const novoPedido = ref.push();
+    novoPedido.set(pedido)
+      .then(() => {
+        // Redireciona para página do Pix
+        window.location.href = "pix.html";
+      })
+      .catch((error) => {
+        alert("Erro ao enviar os dados. Tente novamente.");
+        console.error(error);
+      });
+  }
+    
+  </script>
+</body>
+</html>

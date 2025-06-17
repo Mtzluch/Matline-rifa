@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pagamento via PIX</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <style>
+    :root {
+      --cor-destaque: #ff6600;
+      --preto: #000;
+      --branco: #fff;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--branco);
+      color: #111;
+    }
+
+    header {
+      background: var(--preto);
+      padding: 20px;
+      text-align: center;
+    }
+
+    header img {
+      height: 60px;
+    }
+
+    main {
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    .box {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    canvas {
+      margin: 20px 0;
+    }
+
+    .codigo {
+      background: #eee;
+      padding: 10px;
+      border-radius: 8px;
+      word-break: break-all;
+      margin: 15px 0;
+    }
+
+    button {
+      margin: 10px;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .copiar {
+      background: var(--cor-destaque);
+      color: white;
+    }
+
+    .finalizar {
+      background: #333;
+      color: white;
+    }
+
+    footer {
+      background: var(--preto);
+      color: var(--branco);
+      padding: 20px;
+      text-align: center;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="imgs/logo.png" alt="Logo Matline">
+  </header>
+
+  <main>
+    <div class="box">
+      <h2>Pagamento via PIX</h2>
+      <canvas id="qrCode"></canvas>
+
+      <div class="codigo" id="pixCopiaCola"></div>
+
+      <button class="copiar" onclick="copiarCodigo()">Copiar código PIX</button>
+      <button class="finalizar" onclick="finalizar()">Finalizar</button>
+    </div>
+  </main>
+
+  <footer>
+    <p>Contato: (47) 98859-7839</p>
+    <p>&copy; 2025 Matline. Todos os direitos reservados.</p>
+  </footer>
+
+  <script>
+    
+     const chavePix = "seranity777@gmail.com"; // substitua pelo seu CPF sem pontos
+const nome = "Matline";
+const cidade = "Joinville";
+const valor = parseFloat(localStorage.getItem('valorPorNumero')) * JSON.parse(localStorage.getItem('numerosSelecionados')).length;
+const descricao = "RifaMatline";
+
+// Geração correta do payload manual
+function gerarPayloadPix(chave, nome, cidade, valor, descricao) {
+  function format(id, value) {
+    return id + String(value.length).padStart(2, '0') + value;
+  }
+
+  const payloadSemCRC =
+    format("00", "01") +
+    format("26", format("00", "BR.GOV.BCB.PIX") + format("01", chave)) +
+    format("52", "0000") +
+    format("53", "986") +
+    format("54", valor.toFixed(2)) +
+    format("58", "BR") +
+    format("59", nome.substring(0, 25)) +
+    format("60", cidade.substring(0, 15)) +
+    format("62", format("05", descricao));
+
+  const fullPayload = payloadSemCRC + "6304";
+
+  function crc16(str) {
+    let crc = 0xFFFF;
+    for (let c of str) {
+      crc ^= c.charCodeAt(0) << 8;
+      for (let i = 0; i < 8; i++) {
+        if ((crc & 0x8000) !== 0) {
+          crc = (crc << 1) ^ 0x1021;
+        } else {
+          crc <<= 1;
+        }
+        crc &= 0xFFFF;
+      }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, "0");
+  }
+
+  return fullPayload + crc16(fullPayload);
+}
+
+// Gerar payload final válido
+const payload = gerarPayloadPix(chavePix, nome, cidade, valor, descricao);
+    // Exibe no HTML
+    document.getElementById('pixCopiaCola').textContent = payload;
+
+    // Gera o QR Code
+    const qr = new QRious({
+      element: document.getElementById('qrCode'),
+      value: payload,
+      size: 240,
+    });
+
+    function copiarCodigo() {
+      const texto = document.getElementById("pixCopiaCola").textContent;
+      navigator.clipboard.writeText(texto);
+      alert("Código PIX copiado!");
+    }
+
+    function finalizar() {
+      alert("Obrigado por participar! Enviaremos confirmação no WhatsApp!");
+      // Aqui você pode redirecionar para uma página final ou WhatsApp
+      // window.location.href = "obrigado.html";
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rifa Matline</title>
+  <style>
+    :root {
+      --cor-destaque: #ff6600;
+      --preto: #000;
+      --branco: #fff;
+      --cinza: #f0f0f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: var(--branco);
+      color: #111;
+    }
+
+    header {
+      background: var(--preto);
+      padding: 20px;
+      text-align: center;
+    }
+
+    header img {
+      height: 60px;
+    }
+
+    .intro {
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    .intro h1 {
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .intro p {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .intro img {
+      width: 280px;
+      max-width: 90%;
+      border-radius: 12px;
+      box-shadow: 0 0 15px var(--cor-destaque);
+    }
+
+    .numeros {
+      background: var(--branco);
+      padding: 30px 15px;
+      text-align: center;
+    }
+
+    .numeros h2 {
+      margin-bottom: 15px;
+    }
+
+    .grade {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .numero {
+      background: var(--cinza);
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      border: 2px solid var(--cor-destaque);
+      cursor: pointer;
+    }
+
+    .numero.vendido {
+      background: #ccc;
+      color: #777;
+      text-decoration: line-through;
+      cursor: not-allowed;
+    }
+
+    footer {
+      background: var(--preto);
+      color: var(--branco);
+      padding: 30px 15px;
+      text-align: center;
+    }
+
+    footer p {
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .grade {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    /* ADICIONA AO FINAL DO <style> EXISTENTE */
+
+    .numero.selecionado {
+      background: var(--cor-destaque);
+      color: white;
+    }
+
+    #botaoConfirmar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--cor-destaque);
+      color: white;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header com logo -->
+  <header>
+    <img src="imgs/logo.png"/>
+  </header>
+
+  <!-- Texto de boas-vindas e prêmio -->
+  <section class="intro">
+    <h1>Bem-vindo à Rifa Matline!</h1>
+    <p>Concorra a tres premios incriveis!!<br>
+      <strong>1 lugar: </strong>R$1000<br>
+      <strong>2 lugar: </strong>R$500<br>
+      <strong>3 lugar: </strong>R$250</p>
+    <p style="margin-top: 10px;">Sorteio no dia <strong>20/07</strong>!<br>
+      Cada número custa <strong>R$2,00</strong>!<br>
+      Comprovante sera enviado a você pelo whatsapp após confirmacao de pagamento!!
+    </p>
+  </section>
+
+  <!-- Números da rifa -->
+  <section class="numeros">
+    <h2>Escolha seu número</h2>
+    <div class="grade" id="numerosContainer">
+      <!-- Números serão inseridos aqui via JS -->
+    </div>
+  </section>
+
+  <!-- Rodapé / Endpage -->
+  <footer>
+    <p>Entre em contato pelo WhatsApp: (47) 98859-7839</p>
+    <p>&copy; 2025 Matline. Todos os direitos reservados.</p>
+  </footer>
+
+  <script>
+    const totalNumeros = 10000; // 🔧 Altere esse valor conforme a rifa
+    const numerosVendidos = []; // Atualize com os vendidos
+    const container = document.getElementById('numerosContainer');
+
+    const selecionados = new Set();
+
+    function atualizarBotao() {
+  const botao = document.getElementById('botaoConfirmar');
+  const qtd = selecionados.size;
+
+  if (qtd > 0) {
+    botao.textContent = `Confirmar seleção (${qtd})`;
+    botao.style.display = 'block';
+  } else {
+    botao.style.display = 'none';
+  }
+}
+
+    for (let i = 1; i <= totalNumeros; i++) {
+  const div = document.createElement('div');
+  div.className = 'numero';
+  div.textContent = i;
+  div.setAttribute('data-numero', i); // ✅ adiciona atributo para Firebase localizar; // 🔥 ISSO AQUI FALTAVA
+
+      if (numerosVendidos.includes(i)) {
+        div.classList.add('vendido');
+      } else {
+        div.addEventListener('click', () => {
+  if (div.classList.contains('vendido') || div.classList.contains('indisponivel')) {
+    return; // ❌ impede clique em números vendidos
+  }
+
+  if (div.classList.contains('selecionado')) {
+    div.classList.remove('selecionado');
+    selecionados.delete(i);
+  } else {
+    div.classList.add('selecionado');
+    selecionados.add(i);
+  }
+  atualizarBotao();
+});
+      }
+
+      container.appendChild(div);
+    }
+  </script>
+
+  <!-- BOTÃO FIXO -->
+  <button id="botaoConfirmar" onclick="irParaPagamento()">
+    Confirmar seleção
+  </button>
+
+  <script>
+    function irParaPagamento() {
+      // Aqui futuramente você redireciona para a página de pagamento
+      // Salvar dados no localStorage antes de redirecionar
+localStorage.setItem('numerosSelecionados', JSON.stringify([...selecionados]));
+localStorage.setItem('valorPorNumero', 2.00); // Atualize esse valor conforme a rifa
+
+window.location.href = 'conf.html';
+    }
+  </script>
+  <!-- Firebase App (base) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<!-- Firebase Database -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCcFT1wZ44d9Qb_YI1wwO6-5_gAAhwwfgs",
+    authDomain: "matline-rifa.firebaseapp.com",
+    databaseURL: "https://matline-rifa-default-rtdb.firebaseio.com",
+    projectId: "matline-rifa",
+    storageBucket: "matline-rifa.firebasestorage.app",
+    messagingSenderId: "704222950179",
+    appId: "1:704222950179:web:f6931376fa1a8dc5b65296"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function carregarNumerosPagos() {
+    const refPagos = db.ref("rifaAtual/numerosPagos");
+    refPagos.once("value", (snapshot) => {
+      const pagos = snapshot.val();
+      if (pagos) {
+        Object.keys(pagos).forEach((num) => {
+          const botao = document.querySelector(`.numero[data-numero='${num}']`);
+          if (botao) {
+            botao.classList.add("indisponivel",
+            "vendido");
+            botao.disabled = true;
+            botao.innerText = "X";
+          }
+        });
+      }
+    });
+  }
+
+  window.onload = carregarNumerosPagos;
+  </script>
+
+  <style>
+  .numero.indisponivel {
+    background-color: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed;
+  }
+</style>
+
+</body>
+</html>
